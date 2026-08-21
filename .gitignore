@@ -1,0 +1,31 @@
+.worktrees/
+.superpowers/
+.codex/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
+# Local data and experiment artifacts
+data/
+checkpoint/
+results/
+EvaluateResults*/
+Explainability/
+
+# External model assets
+pretrained/
+BioMedCLIP/pretrained/
+*.pth
+*.pt
+*.bin
+*.safetensors
+
+# Generated outputs
+*.npz
+*.png
+*.jpg
+*.jpeg
+*.csv
+*.log
+*.out

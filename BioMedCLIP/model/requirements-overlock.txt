@@ -1,0 +1,13 @@
+# Tested in the remote conda environment named `overlock`.
+# The OpenCLIP implementation itself is vendored in model/open_clip and is
+# therefore not imported from site-packages at runtime.
+torch==2.3.1
+torchvision
+timm==0.6.12
+transformers==4.35.2
+sentencepiece
+ftfy
+regex
+protobuf
+huggingface-hub==0.36.2
+safetensors
