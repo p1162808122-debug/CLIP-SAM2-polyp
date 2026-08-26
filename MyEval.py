@@ -2,10 +2,11 @@ import argparse
 from pathlib import Path
 import re
 
-from utils.metrics import evaluate_dataset, write_result_files
+from utils.metrics import FIXED_THRESHOLD, evaluate_dataset, write_result_files
 
 
 DATASETS = ["CVC-300", "CVC-ClinicDB", "Kvasir", "CVC-ColonDB", "ETIS-LaribPolypDB"]
+THRESHOLD = FIXED_THRESHOLD
 
 
 def discover_latest_run(results_root: Path):
@@ -19,13 +20,24 @@ def discover_latest_run(results_root: Path):
 
 def discover_models(run_dir: Path):
     pattern = re.compile(r"^(?:last_model|best_model\d*)$", re.IGNORECASE)
-    return [path.name for path in sorted(run_dir.iterdir()) if path.is_dir() and pattern.match(path.name)]
+    return [
+        path.name
+        for path in sorted(run_dir.iterdir())
+        if path.is_dir() and pattern.match(path.name)
+    ]
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Evaluate static SAM2 predictions.")
+    parser = argparse.ArgumentParser(
+        description="Evaluate static SAM2 predictions at fixed threshold 0.5."
+    )
     parser.add_argument("--data-path", type=str, default="data/TestDataset")
-    parser.add_argument("--models", type=str, default=None, help="run directory name under results/")
+    parser.add_argument(
+        "--models",
+        type=str,
+        default=None,
+        help="run directory name under results/",
+    )
     parser.add_argument("--datasets", nargs="+", default=DATASETS)
     return parser.parse_args()
 
@@ -34,41 +46,61 @@ def main():
     args = parse_args()
     project_root = Path(__file__).resolve().parent
     results_root = project_root / "results"
+
     run_name = args.models or discover_latest_run(results_root)
     if run_name is None:
         raise FileNotFoundError(f"No runN_* directory found in {results_root}")
+
     run_dir = results_root / run_name
+    if not run_dir.is_dir():
+        raise FileNotFoundError(f"Run directory not found: {run_dir}")
+
     model_names = discover_models(run_dir)
     if not model_names:
         raise FileNotFoundError(f"No model result directories found in {run_dir}")
+
     data_root = Path(args.data_path)
+    if not data_root.is_absolute():
+        data_root = (project_root / data_root).resolve()
 
     for model_name in model_names:
         model_result_dir = run_dir / model_name
         output_dir = project_root / "EvaluateResults" / run_name / model_name
         results = {}
+
         for dataset_name in args.datasets:
             prediction_dir = model_result_dir / dataset_name
             ground_truth_dir = data_root / dataset_name / "masks"
+
             if not prediction_dir.is_dir() or not ground_truth_dir.is_dir():
                 print(f"[Skip] {dataset_name}: predictions or masks missing")
                 continue
-            result = evaluate_dataset(prediction_dir, ground_truth_dir)
+
+            result = evaluate_dataset(
+                prediction_dir,
+                ground_truth_dir,
+                threshold=THRESHOLD,
+            )
             results[dataset_name] = result
             print(
                 f"{run_name}/{model_name}/{dataset_name} | "
+                f"count={result['count']} | threshold={result['threshold']:.1f} | "
                 f"meanDic={result['meanDic']:.4f} | meanIoU={result['meanIoU']:.4f}"
             )
+
         if results:
             write_result_files(output_dir, run_name, model_name, results)
             lines = []
             for dataset_name, result in results.items():
                 lines.append(
                     f"Run={run_name} Model={model_name} Dataset={dataset_name} "
-                    f"meanDic={result['meanDic']:.4f} meanIoU={result['meanIoU']:.4f} "
-                    f"maxDic={result['maxDic']:.4f} maxIoU={result['maxIoU']:.4f}"
+                    f"count={result['count']} threshold={result['threshold']:.1f} "
+                    f"meanDic={result['meanDic']:.4f} meanIoU={result['meanIoU']:.4f}"
                 )
-            (output_dir / f"{model_name}_result.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            (output_dir / f"{model_name}_result.txt").write_text(
+                "\n".join(lines) + "\n",
+                encoding="utf-8",
+            )
 
 
 if __name__ == "__main__":
