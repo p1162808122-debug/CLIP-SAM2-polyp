@@ -13,6 +13,26 @@ Research code for a static polyp-segmentation model that combines a SAM2 Hiera-L
 
 The current model entrypoint is `MyTrain.py`; the polyp7 implementation is in `models/polyp5.py` for historical compatibility.
 
+## Method overview
+
+This repository provides the research implementation and methodological figures for a static-image framework for colorectal polyp segmentation. The model combines the hierarchical visual representation of a SAM2 Hiera-L image encoder with the domain-aware semantic representation of BiomedCLIP. Unlike video-oriented SAM2 pipelines, the model processes each colonoscopy image independently and does not rely on temporal memory.
+
+For an input image, the SAM2 and BiomedCLIP image branches extract complementary features. A three-scale dual-gated fusion module integrates these features at the 22$\times$22, 44$\times$44, and 88$\times$88 resolutions. The fused representation is passed to the SAM2 mask decoder to obtain a coarse prediction and is subsequently refined by the three-stage CFBR decoder. In parallel, BiomedCLIP text prompts describing a colorectal polyp and healthy colon tissue provide positive--negative semantic similarities. Mask, semantic-similarity, and boundary-similarity objectives jointly supervise the segmentation and semantic refinement process.
+
+## Architecture figures
+
+### Overall architecture
+
+![Overall CLIP-SAM2 architecture](figure/1.png)
+
+### Dual-gated feature fusion
+
+![Dual-gated feature fusion module](figure/2.png)
+
+### CFBR refinement decoder
+
+![CFBR refinement decoder](figure/3.png)
+
 ## What is intentionally excluded
 
 This repository is source-only. Datasets, pretrained weights, checkpoints, prediction masks, evaluation tables, explainability outputs, logs, and caches are not included.
