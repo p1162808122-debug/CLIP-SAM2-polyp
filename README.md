@@ -33,9 +33,15 @@ For an input image, the SAM2 and BiomedCLIP image branches extract complementary
 
 ![CFBR refinement decoder](figure/3.png)
 
+## Model Weights
+
+The trained experiment checkpoints for CLIP-SAM2-polyp are publicly available on Hugging Face:
+
+[Download CLIP-SAM2-polyp Weights](https://huggingface.co/leojobs/CLIP-SAM2-polyp/tree/main)
+
 ## What is intentionally excluded
 
-This repository is source-only. Datasets, pretrained weights, checkpoints, prediction masks, evaluation tables, explainability outputs, logs, and caches are not included.
+This GitHub repository is source-only. Datasets, large pretrained assets, experiment checkpoints, prediction masks, evaluation tables, explainability outputs, logs, and caches are not stored directly in the repository. The released experiment checkpoints are hosted separately on Hugging Face through the link above.
 
 Before running the code, provide the required SAM2 and BiomedCLIP pretrained assets and your own dataset/split paths. The command-line defaults use relative paths such as `data/TrainDataset` and `data/TestDataset`.
 
